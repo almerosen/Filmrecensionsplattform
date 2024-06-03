@@ -12,10 +12,8 @@ connectDB()
 
 // Routes 
 app.use("/api", userRoutes)
-
 app.use("/api/movies", movieRoutes)
 app.use("/api/reviews", reviewRoutes)
-
 
 
 

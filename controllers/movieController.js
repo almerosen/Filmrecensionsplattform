@@ -58,7 +58,7 @@ const updateMovie = async (req, res) => {
         updates.forEach(update => movie[update] = req.body[update])
         await movie.save()
 
-        return res.status(200).json(movie)
+        return res.status(200).json({ message: "Movie updated successfully", movie})
 
     } catch (error) {
         console.error(error)
