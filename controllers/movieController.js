@@ -1,4 +1,5 @@
 const Movie = require("../models/Movie")  
+const Review = require("../models/Review")
 const mongoose = require("mongoose")
 
 const addMovie = async (req, res) => {
@@ -29,6 +30,7 @@ const getMovieById = async (req, res) => {
         }
         return res.status(200).json(movie)
     } catch (error) {
+        console.error("Failed to aggregare", error)
         return res.status(500).json({ message: "Failed to get movie", error})
     }
 }
@@ -110,11 +112,66 @@ const deleteMovieById = async (req, res) => {
 
 
 
+// GET /movies/ratings: Hämta en lista med alla filmer och deras genomsnittliga betyg.
+const getMoviesAndAverageRatings = async (req, res) => {
+
+    try {
+        const movies = await Movie.aggregate([
+            {
+                $lookup: {
+                    from: 'reviews',
+                    localField: '_id',
+                    foreignField: 'movieId',
+                    as: 'reviews'
+                }
+            },
+            {
+                $addFields: {
+                    averageRating: {
+                        $cond: {
+                            if: { $gt: [{ $size: "$reviews" }, 0]},
+                            then: { $avg: "$reviews.rating" },
+                            else: 0
+                        }
+                    }
+                }
+            },
+            {
+                $project: {
+                    title: 1,
+                    director: 1,
+                    releaseYear: 1,
+                    genre: 1,
+                    averageRating: 1
+                }
+            },
+            {
+                $sort: { title: 1}
+            }
+        ]);
+
+        // Hantera film som saknar recension
+        const result = movies.map(movie => ({
+            ...movie,
+            averageRating: movie.averageRating === 0 ? "This movie has no reviews" : movie.averageRating
+        }))
+
+        return res.status(200).json(result)
+
+    } catch (error) {
+        console.error("Failed to get movies with average ratings:", error)
+        return res.status(500).json({ message: "Failed to get movies with ratings", error})
+    }
+}
+
+
+
 module.exports = {
     addMovie, 
     getMovies, 
     getMovieById, 
     updateMovie, 
     getReviewsByMovieId,
-    deleteMovieById
+    deleteMovieById,
+    getMoviesAndAverageRatings
 }

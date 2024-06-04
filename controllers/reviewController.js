@@ -15,9 +15,32 @@ const addReview = async (req, res) => {
             return res.status(400).json({ message: "You have already made a review of this movie"})
         }
 
+        const { comment, rating} = req.body
+        const reviewData = {}
+
+        if (comment !== undefined) {
+            if (comment.length === 0) {
+                return res.status(400).json({ message: "Comment cannot be empty"})
+            }
+            reviewData.comment = comment
+        }
+
+        if (rating !== undefined) {
+            //Gör om till number
+            const numberRating = Number(rating)
+            if (rating == "") {
+                return res.status(400).json({ message: "Rating cannot be empty"})
+            }
+            if(isNaN(numberRating) || numberRating < 0 || numberRating > 5 ) {
+                return res.status(400).json({ message: "Rating must be a number between 0 and 5"})
+            }
+            reviewData.rating = numberRating
+        }
+
         const review = new Review({
-            ...req.body,
+            ...reviewData,
             userId: req.user._id,
+            movieId: req.body.movieId
         })
         await review.save()
         res.status(201).json({ message: "Review added successfully", review})
@@ -113,6 +136,35 @@ const updateReview = async (req, res) => {
 }
 
 
+// DELETE /reviews/:id: Ta bort en specifik recension.
+const deleteReview = async (req, res) => {
+    try {
+
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(400).json({ message: "Invalid review ID"})
+        }
+
+        //Kolla om recensionen tillhör användaren
+        const review = await Review.findById(req.params.id)
+        if (!review) {
+            return res.status(400).json({ message: "No review found"})
+        }
+        if(review.userId.toString() !== req.user._id.toString()) {
+            return res.status(400).json({ message: "You cannot delete someone else's review"})
+        }
+
+        await Review.findByIdAndDelete(req.params.id)
+       
+        res.status(200).json({ message: "Successfully deleted review", review})
+    } catch (error) {
+        console.error(error)
+        return res.status(500).json({ message: "Failed to delete review", error})
+    }
+}
+
+
+
+
 
 
 
@@ -120,4 +172,6 @@ module.exports = {
     addReview, 
     getAllReviews, 
     getReviewById, 
-    updateReview}
+    updateReview,
+    deleteReview
+}
