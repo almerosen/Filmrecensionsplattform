@@ -6,7 +6,6 @@ const addMovie = async (req, res) => {
     try {
         const movie = new Movie(req.body)
         await movie.save()
-        console.log(req.user)
         return res.status(201).json({ message: "Successfully added a movie", movie})
     } catch (error) {
         res.status(400).json({ message: "Failed to add a movie", error})
@@ -102,7 +101,7 @@ const deleteMovieById = async (req, res) => {
         if (!movie) {
             return res.status(404).json({ message: `No movie found with id ${req.params.id}`})
         }
-        res.status(200).json({ message: "Movie deleted"})
+        res.status(200).json({ message: "Movie deleted", movie})
 
     } catch (error) {
         console.error(error)
@@ -128,11 +127,12 @@ const getMoviesAndAverageRatings = async (req, res) => {
             {
                 $addFields: {
                     averageRating: {
-                        $cond: {
-                            if: { $gt: [{ $size: "$reviews" }, 0]},
-                            then: { $avg: "$reviews.rating" },
-                            else: 0
-                        }
+                        $avg: "$reviews.rating"
+                        // $cond: {
+                        //     if: { $gt: [{ $size: "$reviews" }, 0]},
+                        //     then: { $avg: "$reviews.rating" },
+                        //     else: 0
+                        // }
                     }
                 }
             },
@@ -153,7 +153,7 @@ const getMoviesAndAverageRatings = async (req, res) => {
         // Hantera film som saknar recension
         const result = movies.map(movie => ({
             ...movie,
-            averageRating: movie.averageRating === 0 ? "This movie has no reviews" : movie.averageRating
+            averageRating: movie.averageRating === null ? "This movie has no reviews" : movie.averageRating
         }))
 
         return res.status(200).json(result)

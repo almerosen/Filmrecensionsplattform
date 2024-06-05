@@ -1,7 +1,7 @@
 const Review = require("../models/Review")
 const mongoose = require("mongoose")
 
-// POST Lägg till enn ny recension
+// POST Lägg till en ny recension
 const addReview = async (req, res) => {
     console.log("addreview req.user:", req.user)
     
@@ -15,7 +15,7 @@ const addReview = async (req, res) => {
             return res.status(400).json({ message: "You have already made a review of this movie"})
         }
 
-        const { comment, rating} = req.body
+        const { comment, rating } = req.body
         const reviewData = {}
 
         if (comment !== undefined) {
@@ -69,11 +69,11 @@ const getReviewById = async (req, res) => {
     try {
         const review = await Review.findById(req.params.id).populate("movieId", "title").populate("userId", "username") 
         if (!review) {
-            return res.status(404).json({ message: "Review not found"})
+            return res.status(404).json({ message: "Review not found" })
         }
         return res.status(200).json(review)
     } catch (error) {
-        return res.status(500).json({ message: "Failed to get review", error})
+        return res.status(500).json({ message: "Failed to get review", error })
         console.error(error)
     }
 }
@@ -161,11 +161,6 @@ const deleteReview = async (req, res) => {
         return res.status(500).json({ message: "Failed to delete review", error})
     }
 }
-
-
-
-
-
 
 
 module.exports = {
