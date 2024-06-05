@@ -37,9 +37,16 @@ const login = async (req, res) => {
         if (!await bcrypt.compare(password, user.password)) {
             return res.status(400).json({ message: "Wrong password"})
         }
+        // Ta bort password för responsen
+        const userWithoutPassword = {
+            id: user._id,
+            username: user.username,
+            email: user.email,
+            role: user.role
+        }
 
         const token = jwt.sign({ id: user._id, role: user.role}, process.env.JWT_SECRET_KEY, {expiresIn: "1h"})
-        res.status(200).json({ message: "Sucessfully logged in", token})
+        res.status(200).json({ message: "Sucessfully logged in", user: userWithoutPassword, token})
 
     } catch (error) {
         console.error(error)
