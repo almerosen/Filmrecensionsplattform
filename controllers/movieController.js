@@ -4,6 +4,8 @@ const mongoose = require("mongoose")
 
 const addMovie = async (req, res) => {
     try {
+        const movieExists = await Movie.findOne({title: req.body.title})
+        if (movieExists) return res.status(400).json({ message: "Movie already exists"})
         const movie = new Movie(req.body)
         await movie.save()
         return res.status(201).json({ message: "Successfully added a movie", movie})
